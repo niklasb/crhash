@@ -96,7 +96,7 @@ void usage(char *argv0) {
        << "  -h          Show this help" << endl
        << endl
        << "EXAMPLES" << endl
-       << "  " << argv0 << " -t 4 \"' UNION SELECT 1,1 -- ??????????\" '=0123456789'" << endl;
+       << "  " << argv0 << " -t 4 \"My name is ???\" :97:122" << endl;
   exit(EXIT_FAILURE);
 }
 
