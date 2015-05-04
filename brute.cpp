@@ -91,7 +91,6 @@ int main(int argc, char **argv) {
       total *= (hi - lo + 1);
     }
   }
-  unsigned char hash[hash_size];
   atomic<long long> current(0);
   double start_time = util::get_time();
   mutex mx;
@@ -104,6 +103,7 @@ int main(int argc, char **argv) {
            << " (" << (100.*current/total) << "%, "
            << (current/(util::get_time() - start_time)/1e6) << "mh/s)       " << flush;
     }
+    unsigned char hash[hash_size];
     compute_hash((const unsigned char*)s.c_str(), s.size(), hash);
     if (check(hash)) {
       lock_guard<mutex> lg(mx);
