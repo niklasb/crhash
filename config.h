@@ -1,12 +1,18 @@
-#include "md5.c"
+#include "md5.h"
 
 const size_t hash_size = 16;
 
+/*
 void compute_hash(const unsigned char *data, size_t data_sz, unsigned char *res) {
   MD5_CTX ctx;
   MD5_Init(&ctx);
   MD5_Update(&ctx, data, data_sz);
   MD5_Final(res, &ctx);
+}
+*/
+
+void compute_hash(const unsigned char *data, size_t data_sz, unsigned char *res) {
+  md5_hash(data, data_sz, (uint32_t*)res);
 }
 
 bool check(unsigned char *hash) {
