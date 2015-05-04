@@ -1,55 +1,89 @@
+#include <atomic>
+#include <iomanip>
 #include <iostream>
+#include <mutex>
+#include <thread>
 #include <vector>
-#include <cstring>
 
-#include "md5.h"
+#include <cstdio>
+
+#include "timing.h"
+
+// customization
+#include "config.h"
 using namespace std;
-
-void md5(const unsigned char *data, size_t data_sz, unsigned char res[16]) {
-  MD5_CTX ctx;
-  MD5_Init(&ctx);
-  MD5_Update(&ctx, data, data_sz);
-  MD5_Final(res, &ctx);
-}
-
-string pattern;
-vector<int> wildcard_positions;
-int lo, hi;
-template <typename T>
-void enumerate(int i, T cb) {
-  if (i == wildcard_positions.size()) {
-    cb(pattern);
-    return;
-  }
-  int p = wildcard_positions[i];
-  for (pattern[p] = lo; ; ++pattern[p]) {
-    enumerate(i+1, cb);
-    if (pattern[p] == hi) break;
-  }
-}
-
-bool check(unsigned char hash[16]) {
-  if (hash[0] != 0x0e)
-    return 0;
-  for (int i = 1; i < 16; ++i)
-    if ((hash[i] & ((1<<4)-1)) > 9 || (hash[i]>>4) > 9)
-      return 0;
-  return 1;
-}
 
 void print_hex(unsigned char *data, size_t len) {
   for (int i = 0; i < len; ++i)
     printf("%02x", data[i]);
 }
 
-int main(int argc, char **argv) {
-  if (argc != 4) {
-    cerr << "Usage: pattern_string ascii_lo ascii_hi" << endl;
-    return EXIT_FAILURE;
+string pattern;
+vector<int> wildcard_positions;
+int lo, hi;
+int num_threads;
+
+template <typename T>
+void enumerate(int i, string& pattern, T cb) {
+  if (i == wildcard_positions.size()) {
+    cb(pattern);
+    return;
   }
-  pattern = argv[1];
-  lo = atoi(argv[2]);
-  hi = atoi(argv[3]);
+  int p = wildcard_positions[i];
+  if (i == 0) {
+    vector<thread> threads;
+    int range = hi - lo + 1;
+    int first = lo;
+    for (int t = 0; t < num_threads; ++t) {
+      int last = first + range / num_threads + (t < range % num_threads) - 1;
+      cout << "Thread " << t << " responsible for range "
+           << first << ".." << last << endl;
+      threads.emplace_back([=]() {
+        string local_pattern = pattern;
+        for (local_pattern[p] = first; ; ++local_pattern[p]) {
+          enumerate(i+1, local_pattern, cb);
+          if (local_pattern[p] == last) break;
+        }
+      });
+      first = last + 1;
+    }
+    for (auto& t : threads)
+      t.join();
+  } else {
+    for (pattern[p] = lo; ; ++pattern[p]) {
+      enumerate(i+1, pattern, cb);
+      if (pattern[p] == hi) break;
+    }
+  }
+}
+
+void usage(char *argv0) {
+  cerr << "Usage: " << argv0 << " [-t num_threads] pattern_string ascii_lo ascii_hi" << endl;
+  exit(EXIT_FAILURE);
+}
+
+int main(int argc, char **argv) {
+  if (argc < 4)
+    usage(argv[0]);
+  num_threads = 1;
+  int pos = 0;
+  for (int i = 1; i < argc; ++i) {
+    if (string(argv[i]) == "-t") {
+      if (i + 1 < argc)
+        num_threads = atoi(argv[i+1]);
+      else
+        usage(argv[0]);
+      i++;
+      continue;
+    }
+    if (pos == 0) pattern = argv[i];
+    if (pos == 1) lo = atoi(argv[i]);
+    if (pos == 2) hi = atoi(argv[i]);
+    pos++;
+  }
+  cout << "Threads: " << num_threads << endl;
+  cout << "Pattern: " << pattern << endl;
+  cout << "Range: " << lo << ".." << hi << endl;
   long long total = 1;
   for (size_t i = 0; i < pattern.size(); ++i) {
     if (pattern[i] == '?') {
@@ -57,19 +91,28 @@ int main(int argc, char **argv) {
       total *= (hi - lo + 1);
     }
   }
-  unsigned char hash[16];
-  long long current = 0;
-  enumerate(0, [&](const string& s) {
+  unsigned char hash[hash_size];
+  atomic<long long> current(0);
+  double start_time = util::get_time();
+  mutex mx;
+  enumerate(0, pattern, [&](const string& s) {
     current++;
     if (current % 1000000 == 0) {
-      cout << "Progress: " << current << " / " << total << " (" << (100.*current/total) << "%)" << endl;
+      lock_guard<mutex> lg(mx);
+      cout << "\rProgress: " << current << " / " << total
+           << fixed << setprecision(2)
+           << " (" << (100.*current/total) << "%, "
+           << (current/(util::get_time() - start_time)/1e6) << "mh/s)       " << flush;
     }
-    //cout << s << endl;
-    md5((const unsigned char*)s.c_str(), s.size(), hash);
+    compute_hash((const unsigned char*)s.c_str(), s.size(), hash);
     if (check(hash)) {
-      cout << s << endl;
+      lock_guard<mutex> lg(mx);
+      cout << endl;
+      cout << "String: " << s << endl << "Hash: ";
       print_hex(hash, 16);
+      cout << endl;
       exit(0);
     }
   });
+  cout << endl;
 }
