@@ -176,13 +176,13 @@ int main(int argc, char **argv) {
   atomic<long long> current(0);
   double start_time = util::get_time();
   mutex mx;
+  cout << fixed << setprecision(2);
   enumerate(0, pattern, [&](const string& s) {
     if (verbose)
       current++;
     if (verbose && current % 1000000 == 0) {
       lock_guard<mutex> lg(mx);
       cout << "\rPROGRESS " << current << " / " << total
-           << fixed << setprecision(2)
            << " (" << (100.*current/total) << "%, "
            << (current/(util::get_time() - start_time)/1e6) << "mh/s)       " << flush;
     }
@@ -192,6 +192,7 @@ int main(int argc, char **argv) {
       lock_guard<mutex> lg(mx);
       if (verbose) {
         cout << endl << "MATCH" << endl;
+        cout << "  Time: " << (util::get_time() - start_time) << " sec" << endl;
         cout << "  String: ";
       }
       print_repr_string(s);
