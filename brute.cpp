@@ -178,13 +178,16 @@ int main(int argc, char **argv) {
   mutex mx;
   cout << fixed << setprecision(2);
   enumerate(0, pattern, [&](const string& s) {
-    if (verbose)
-      current++;
-    if (verbose && current % 1000000 == 0) {
-      lock_guard<mutex> lg(mx);
-      cout << "\rPROGRESS " << current << " / " << total
-           << " (" << (100.*current/total) << "%, "
-           << (current/(util::get_time() - start_time)/1e6) << "mh/s)       " << flush;
+    if (verbose) {
+      long long cur = ++current;
+      if (cur % 2000000 == 0) {
+        lock_guard<mutex> lg(mx);
+        double time = util::get_time() - start_time;
+        cout << "\rPROGRESS " << cur << " / " << total
+            << " (" << (100.*cur/total) << "%, "
+            << time << " sec, "
+            << (cur/time/1e6) << "mh/s)       " << flush;
+      }
     }
     unsigned char hash[hash_size];
     compute_hash((const unsigned char*)s.c_str(), s.size(), hash);
