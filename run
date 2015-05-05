@@ -1,0 +1,13 @@
+#!/bin/bash
+if [[ ! -d build ]]; then
+  mkdir build
+  cd build
+  cmake .. || exit 1
+  cd ..
+fi
+cd build
+make
+res=$?
+cd ..
+[[ $res != 0 ]] && exit $res
+build/crhash "$@"

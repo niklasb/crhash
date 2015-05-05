@@ -1,4 +1,4 @@
-/brute
 .DS_Store
 *.dSYM
 *.o
+build
