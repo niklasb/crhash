@@ -25,7 +25,7 @@ foreach(INPUT_FILE ${CL_SOURCES})
 endforeach()
 
 message(${CL_COMPILED_SOURCES})
-set(CMAKE_CXX_FLAGS "-std=c++0x -march=native -mtune=native")
+set(CMAKE_CXX_FLAGS "-O3 -std=c++0x -march=native -mtune=native")
 
 file(GLOB SOURCES *.cpp)
 file(GLOB HEADERS *.{h,hpp})
