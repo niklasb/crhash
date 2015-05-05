@@ -27,10 +27,8 @@ endforeach()
 set(CMAKE_CXX_FLAGS "-O3 -std=c++0x -march=native -mtune=native")
 
 file(GLOB SOURCES *.cpp)
-file(GLOB HEADERS *.{h,hpp})
 add_executable(crhash
   ${SOURCES}
-  ${HEADERS}
   ${CL_COMPILED_SOURCES}
 )
 
