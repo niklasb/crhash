@@ -381,12 +381,14 @@ int main(int argc, char **argv) {
   cout << fixed << setprecision(2);
   run(
     [&](size_t current) {
-      lock_guard<mutex> lg(mx);
-      double time = util::get_time() - start_time;
-      cout << "\rPROGRESS " << current << " / " << total
-          << " (" << (100.*current/total) << "%, "
-          << time << " sec, "
-          << (current/time/1e6) << "mh/s)       " << flush;
+      if (verbose) {
+        lock_guard<mutex> lg(mx);
+        double time = util::get_time() - start_time;
+        cout << "\rPROGRESS " << current << " / " << total
+            << " (" << (100.*current/total) << "%, "
+            << time << " sec, "
+            << (current/time/1e6) << "mh/s)       " << flush;
+      }
     },
     [&](const string& match) {
       lock_guard<mutex> lg(mx);
