@@ -6,7 +6,6 @@ if [[ ! -d build ]]; then
   cd ..
 fi
 cd build
-cmake ..
 make
 res=$?
 cd ..

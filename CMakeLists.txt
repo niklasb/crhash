@@ -14,17 +14,16 @@ file(GLOB CL_SOURCES "*.cl")
 foreach(INPUT_FILE ${CL_SOURCES})
   get_filename_component(BASENAME ${INPUT_FILE} NAME)
   set(OUTPUT_FILE ${CL_COMPILED_SOURCES_DIR}/${BASENAME}.h)
-  message("${INPUT_FILE} -> ${OUTPUT_FILE}")
   add_custom_command(
     OUTPUT ${OUTPUT_FILE}
     COMMAND ${CMAKE_COMMAND} -E copy ${INPUT_FILE} ${BASENAME}
     COMMAND xxd -i ${BASENAME} ${OUTPUT_FILE}
     DEPENDS ${INPUT_FILE}
-    COMMENT "Compiling ${BASENAME} to C header file ${OUTPUT_FILE}")
+    COMMENT "Compiling ${BASENAME} to C header file"
+  )
   list(APPEND CL_COMPILED_SOURCES ${OUTPUT_FILE})
 endforeach()
 
-message(${CL_COMPILED_SOURCES})
 set(CMAKE_CXX_FLAGS "-O3 -std=c++0x -march=native -mtune=native")
 
 file(GLOB SOURCES *.cpp)
