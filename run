@@ -2,10 +2,11 @@
 if [[ ! -d build ]]; then
   mkdir build
   cd build
-  cmake .. || exit 1
+  cmake ..
   cd ..
 fi
 cd build
+cmake ..
 make
 res=$?
 cd ..

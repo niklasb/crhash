@@ -5,28 +5,34 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 find_package(OpenCL REQUIRED)
 
+set(CL_COMPILED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
 include_directories(${OPENCL_INCLUDE_DIRS})
+include_directories(${CL_COMPILED_SOURCES_DIR})
 
-SET(RESOURCE_COMPILER xxd)
-FILE(GLOB COMPILED_RESOURCES "*.cl")
-FOREACH(INPUT_FILE ${COMPILED_RESOURCES})
-  SET(OUTPUT_FILE ${INPUT_FILE}.h)
-  ADD_CUSTOM_COMMAND(
+file(GLOB CL_SOURCES "*.cl")
+foreach(INPUT_FILE ${CL_SOURCES})
+  get_filename_component(BASENAME ${INPUT_FILE} NAME)
+  set(OUTPUT_FILE ${CL_COMPILED_SOURCES_DIR}/${BASENAME}.h)
+  message("${INPUT_FILE} -> ${OUTPUT_FILE}")
+  add_custom_command(
     OUTPUT ${OUTPUT_FILE}
-    COMMAND ${RESOURCE_COMPILER} -i ${INPUT_FILE} ${OUTPUT_FILE}
-    COMMENT "Compiling ${INPUT_FILE} to C header file")
-  LIST(APPEND COMPILED_RESOURCES ${OUTPUT_FILE})
-ENDFOREACH()
+    COMMAND ${CMAKE_COMMAND} -E copy ${INPUT_FILE} ${BASENAME}
+    COMMAND xxd -i ${BASENAME} ${OUTPUT_FILE}
+    DEPENDS ${INPUT_FILE}
+    COMMENT "Compiling ${BASENAME} to C header file ${OUTPUT_FILE}")
+  list(APPEND CL_COMPILED_SOURCES ${OUTPUT_FILE})
+endforeach()
 
-SET(CMAKE_CXX_FLAGS "-std=c++0x -march=native -mtune=native")
+message(${CL_COMPILED_SOURCES})
+set(CMAKE_CXX_FLAGS "-std=c++0x -march=native -mtune=native")
 
-FILE(GLOB Sources *.cpp)
-FILE(GLOB Headers *.{h,hpp})
-FILE(GLOB CLSources *.cl)
-ADD_EXECUTABLE (crhash
-  ${Sources}
-  ${Headers}
-  ${CLSources}
-  )
+file(GLOB SOURCES *.cpp)
+file(GLOB HEADERS *.{h,hpp})
+add_executable(crhash
+  ${SOURCES}
+  ${HEADERS}
+  ${CL_COMPILED_SOURCES}
+)
 
 target_link_libraries(crhash ${OPENCL_LIBRARIES})

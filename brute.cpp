@@ -232,7 +232,7 @@ void run_gpu(T cb_progress, U cb_match) {
   size_t pattern_len = wildcard_positions.back() - wildcard_positions[0] + 1;
   int lo = (unsigned char)alphabets[0][0], hi = (unsigned char)alphabets[0].back();
   CLBruteForceApp app(
-      read_file(cl_filename), cl_kernel_name,
+      cl_kernel_source, cl_kernel_name,
       prefix, suffix,
       lo, hi,
       pattern_len,

@@ -1,11 +1,13 @@
 #include <random>
 #include "md5.h"
 
+#include "md5.cl.h"
+
 #define HAVE_OPENCL 1
 
 const size_t hash_size = 16; // in bytes
 
-const std::string cl_filename = "md5.cl";
+const std::string cl_kernel_source(md5_cl, md5_cl + md5_cl_len);
 const std::string cl_kernel_name = "GenerateAndCheck";
 const size_t cl_chunk_size = 1<<24;
 
