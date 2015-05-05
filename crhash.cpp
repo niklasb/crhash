@@ -253,27 +253,33 @@ void run(T cb_progress, U cb_match) {
 
 void usage(char *argv0) {
   cerr << "Usage: " << argv0 << " [-t num_threads] [-s] [-a] pattern_string "
-       << "alphabet [alphabet [...]]" << endl
+       << "alphabet0 [alphabet1 [...]]" << endl
        << endl
        << "pattern_string" << endl
        << "  is a string with ? chars as placeholders" << endl
        << endl
-       << "alphabet" << endl
+       << "alphabetX" << endl
        << "  is an alphabet specification in one of two formats:" << endl
        << "    =s     represents the explicit set of characters in s" << endl
        << "    :lo:hi represents the explicit set of ascii characters with" << endl
        << "           ASCII values in the inclusive range lo..hi" << endl
+       << endl
+       << "  You can provide different charsets for the different wildcard positions" << endl
+       << "  in the pattern string. The last character set you provide will be used" << endl
+       << "  for the remaining positions." << endl
        << endl
        << "OPTIONS" << endl
        << "  -t integer  Use the given number of threads" << endl
        << "  -s          No verbose output, just dump the result string" << endl
        << "  -a          Find all matching strings" << endl;
   if (HAVE_OPENCL)
-    cerr << "  -c          Use OpenCL" << endl;
+    cerr << "  -c          Use OpenCL. Currently only supports a subset of patterns," << endl
+         << "              specifically ones where the wildcards are all contiguous and" << endl
+         << "              there is only one contiguous charset. I.e. <prefix>\?\?...\?\?<suffix>" << endl;
   cerr << "  -h          Show this help" << endl
        << endl
        << "EXAMPLES" << endl
-       << "  " << argv0 << " -t 4 \"My name is ???\" :97:122" << endl;
+       << "  " << argv0 << " -t 4 \"My name is \?\?\?\" :97:122" << endl;
   exit(EXIT_FAILURE);
 }
 
