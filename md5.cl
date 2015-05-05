@@ -2,6 +2,7 @@
 
 uint isdigit(uint x);
 bool check(uint4 hash);
+uint4 md5_compress(uint *buf, uint4 state);
 uint4 md5(uint *buf, uint len);
 
 /* Macros for reading/writing chars from int32's (from rar_kernel.cl) */
@@ -13,10 +14,6 @@ uint isdigit(uint x) {
   for (int i = 0; i < 8; ++i)
     res &= ((x >> (i<<2))& 0xf) <= 9;
   return res;
-  /*for (int i = 0; i < 8; ++i)*/
-    /*if (((x >> (i<<2))&0xf) > 9)*/
-      /*return 0;*/
-  /*return 1;*/
 }
 
 bool check(uint4 hash) {
@@ -24,14 +21,12 @@ bool check(uint4 hash) {
     & ((hash.x & 0xff) == 0x0e)
     & isdigit(hash.x & ~0xff)
     & isdigit(hash.y)
-
     & isdigit(hash.z)
     & isdigit(hash.w)
     ;
 }
 
-// 1 block only. len must be <= 55
-uint4 md5(uint *buf, uint len) {
+uint4 md5_compress(uint *buf, uint4 state) {
   /* The basic MD5 functions */
   #define F(x, y, z)			((z) ^ ((x) & ((y) ^ (z))))
   #define G(x, y, z)			((y) ^ ((z) & ((x) ^ (y))))
@@ -41,20 +36,16 @@ uint4 md5(uint *buf, uint len) {
   /* The MD5 transformation for all four rounds. */
   #define STEP(f, a, b, c, d, x, t, s) \
       (a) += f((b), (c), (d)) + (x) + (t); \
-      (a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s)))); \
+      (a) = (((a) << (s)) | ((a) >> (32 - (s)))); \
       (a) += (b);
 
   #define GET(i) (buf[(i)])
 
-  PUTCHAR(buf, len, 0x80);
-  PUTCHAR(buf, 56, len << 3);
-  PUTCHAR(buf, 57, len >> 5);
-
   uint a, b, c, d;
-  a = 0x67452301;
-  b = 0xefcdab89;
-  c = 0x98badcfe;
-  d = 0x10325476;
+  a = state.x;
+  b = state.y;
+  c = state.z;
+  d = state.w;
 
   /* Round 1 */
   STEP(F, a, b, c, d, GET(0), 0xd76aa478, 7)
@@ -129,11 +120,38 @@ uint4 md5(uint *buf, uint len) {
   STEP(I, b, c, d, a, GET(9), 0xeb86d391, 21)
 
   uint4 res;
-  res.x = a + 0x67452301;
-  res.y = b + 0xefcdab89;
-  res.z = c + 0x98badcfe;
-  res.w = d + 0x10325476;
+  res.x = a + state.x;
+  res.y = b + state.y;
+  res.z = c + state.z;
+  res.w = d + state.w;
   return res;
+}
+
+// 1 block only. len must be <= 55
+uint4 md5(uint *buf, uint len) {
+  /* The basic MD5 functions */
+  #define F(x, y, z)			((z) ^ ((x) & ((y) ^ (z))))
+  #define G(x, y, z)			((y) ^ ((z) & ((x) ^ (y))))
+  #define H(x, y, z)			((x) ^ (y) ^ (z))
+  #define I(x, y, z)			((y) ^ ((x) | ~(z)))
+
+  /* The MD5 transformation for all four rounds. */
+  #define STEP(f, a, b, c, d, x, t, s) \
+      (a) += f((b), (c), (d)) + (x) + (t); \
+      (a) = (((a) << (s)) | ((a) >> (32 - (s)))); \
+      (a) += (b);
+
+  #define GET(i) (buf[(i)])
+
+  PUTCHAR(buf, len, 0x80);
+  PUTCHAR(buf, 56, len << 3);
+  PUTCHAR(buf, 57, len >> 5);
+  uint4 state;
+  state.x = 0x67452301;
+  state.y = 0xefcdab89;
+  state.z = 0x98badcfe;
+  state.w = 0x10325476;
+  return md5_compress(buf, state);
 }
 
 __kernel void GenerateAndCheck(
