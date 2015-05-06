@@ -27,8 +27,8 @@ The included config searches for strings whose hexed MD5 hash is of the form
     alphabetX
       is an alphabet specification in one of two formats:
         =s     represents the explicit set of characters in s
-        :lo:hi represents the explicit set of ascii characters with
-              ASCII values in the inclusive range lo..hi
+        :lo:hi represents the set of characters with ASCII values
+               in the inclusive range lo..hi
 
       You can provide different charsets for the different wildcard positions
       in the pattern string. The last character set you provide will be used

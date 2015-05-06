@@ -262,8 +262,8 @@ void usage(char *argv0) {
        << "alphabetX" << endl
        << "  is an alphabet specification in one of two formats:" << endl
        << "    =s     represents the explicit set of characters in s" << endl
-       << "    :lo:hi represents the explicit set of ascii characters with" << endl
-       << "           ASCII values in the inclusive range lo..hi" << endl
+       << "    :lo:hi represents the set of characters with ASCII values" << endl
+       << "           in the inclusive range lo..hi" << endl
        << endl
        << "  You can provide different charsets for the different wildcard positions" << endl
        << "  in the pattern string. The last character set you provide will be used" << endl
