@@ -263,7 +263,7 @@ void run(T cb_progress, U cb_match) {
 }
 
 void usage(char *argv0) {
-  cerr << "Usage: " << argv0 << " [-t num_threads] [-s] [-a] pattern_string "
+  cerr << "Usage: " << argv0 << " [FLAGS] pattern_string "
        << "alphabet0 [alphabet1 [...]]" << endl
        << endl
        << "pattern_string" << endl

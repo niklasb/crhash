@@ -19,7 +19,7 @@ The included config searches for strings whose hexed MD5 hash is of the form
 
 ### Usage
 
-    Usage: crhash [-t num_threads] [-s] [-a] pattern_string alphabet0 [alphabet1 [...]]
+    Usage: crhash [FLAGS] pattern_string alphabet0 [alphabet1 [...]]
 
     pattern_string
       is a string with ? chars as placeholders
