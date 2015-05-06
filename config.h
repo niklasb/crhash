@@ -3,7 +3,7 @@
 
 #include "md5.cl.h"
 
-#define HAVE_OPENCL 1
+#define CAN_OPENCL 1
 
 const size_t hash_size = 16; // in bytes
 

@@ -10,7 +10,9 @@
 
 #include "io.h"
 #include "timing.h"
-#include "opencl.h"
+#if HAVE_OPENCL
+#  include "opencl.h"
+#endif
 
 // customization
 #include "config.h"
@@ -54,7 +56,7 @@ void enumerate(int idx, string& pattern, T cb) {
   int p = wildcard_positions[idx];
   string alphabet = idx < alphabets.size() ? alphabets[idx] : alphabets.back();
   int alph_sz = alphabet.size();
-  if (idx == 0) {
+  if (idx == 0 && num_threads > 1) {
     vector<thread> threads;
     int first = 0;
     for (int t = 0; t < num_threads; ++t) {
@@ -100,6 +102,7 @@ void run_cpu(T cb_progress, U cb_match) {
   });
 }
 
+#if HAVE_OPENCL
 class CLBruteForceApp {
   OpenCLApp app;
   cl::Kernel kernel;
@@ -243,6 +246,13 @@ void run_gpu(T cb_progress, U cb_match) {
     app.print_cl_info();
   app.run(cb_progress, cb_match);
 }
+#else // HAVE_OPENCL
+template <typename T, typename U>
+void run_gpu(T cb_progress, U cb_match) {
+  cerr << "OpenCL not supported on your machine." << endl;
+  exit(1);
+}
+#endif
 
 template <typename T, typename U>
 void run(T cb_progress, U cb_match) {
@@ -273,7 +283,7 @@ void usage(char *argv0) {
        << "  -t integer  Use the given number of threads" << endl
        << "  -s          No verbose output, just dump the result string" << endl
        << "  -a          Find all matching strings" << endl;
-  if (HAVE_OPENCL)
+  if (HAVE_OPENCL && CAN_OPENCL)
     cerr << "  -c          Use OpenCL. Currently only supports a subset of patterns," << endl
          << "              specifically ones where the wildcards are all contiguous and" << endl
          << "              there is only one contiguous charset. I.e. <prefix>\?\?...\?\?<suffix>" << endl;
@@ -303,7 +313,7 @@ void parse_opts(int argc, char **argv) {
       verbose = false;
       continue;
     }
-    if (HAVE_OPENCL && string(argv[i]) == "-c") {
+    if (HAVE_OPENCL && CAN_OPENCL && string(argv[i]) == "-c") {
       use_opencl = true;
       continue;
     }
