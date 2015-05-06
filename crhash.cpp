@@ -282,12 +282,12 @@ void usage(char *argv0) {
        << "OPTIONS" << endl
        << "  -t integer  Use the given number of threads" << endl
        << "  -s          No verbose output, just dump the result string" << endl
-       << "  -a          Find all matching strings" << endl;
-  if (HAVE_OPENCL && CAN_OPENCL)
-    cerr << "  -c          Use OpenCL. Currently only supports a subset of patterns," << endl
-         << "              specifically ones where the wildcards are all contiguous and" << endl
-         << "              there is only one contiguous charset. I.e. <prefix>\?\?...\?\?<suffix>" << endl;
-  cerr << "  -h          Show this help" << endl
+       << "  -a          Find all matching strings" << endl
+       << "  -c          " << ((HAVE_OPENCL && CAN_OPENCL) ? "" : "[UNAVAILABLE] ")
+       <<                "Use OpenCL. Currently only supports a subset of patterns," << endl
+       << "              specifically ones where the wildcards are all contiguous and" << endl
+       << "              there is only one contiguous charset. I.e. <prefix>\?\?...\?\?<suffix>" << endl
+       << "  -h          Show this help" << endl
        << endl
        << "EXAMPLES" << endl
        << "  " << argv0 << " -t 4 \"My name is \?\?\?\" :97:122" << endl;
@@ -313,7 +313,7 @@ void parse_opts(int argc, char **argv) {
       verbose = false;
       continue;
     }
-    if (HAVE_OPENCL && CAN_OPENCL && string(argv[i]) == "-c") {
+    if (string(argv[i]) == "-c") {
       use_opencl = true;
       continue;
     }
@@ -343,6 +343,14 @@ void parse_opts(int argc, char **argv) {
   }
   if (pos < 2) {
     usage(argv[0]);
+  }
+  if (use_opencl && !HAVE_OPENCL) {
+    cerr << "Your system does not support OpenCL" << endl;
+    exit(1);
+  }
+  if (use_opencl && !CAN_OPENCL) {
+    cerr << "The plugin you use does not support OpenCL" << endl;
+    exit(1);
   }
   if (num_threads > 1 && use_opencl) {
     cerr << "Can't use both multithreading and OpenCL" << endl;
