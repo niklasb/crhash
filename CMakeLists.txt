@@ -10,7 +10,6 @@ if(OPENCL_INCLUDE_DIRS)
   include_directories(${OPENCL_INCLUDE_DIRS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OPENCL=1")
 else()
-  message("Not using OpenCL")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OPENCL=0")
 endif()
 
