@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <unistd.h>
+
 #include "io.h"
 #include "timing.h"
 #if HAVE_OPENCL
