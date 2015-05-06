@@ -6,10 +6,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 # OpenCL
 find_package(OpenCL)
 
-if("${OPENCL_INCLUDE_DIRS}" EQUAL "OPENCL_INCLUDE_DIRS-NOTFOUND")
+if(DEFINED OPENCL_FOUND)
+  message("Using OpenCL")
   include_directories(${OPENCL_INCLUDE_DIRS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OPENCL=1")
 else()
+  message("Not using OpenCL")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OPENCL=0")
 endif()
 
