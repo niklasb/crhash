@@ -41,6 +41,7 @@ int num_threads = 1;
 bool verbose = true;
 bool compute_all = false;
 bool use_opencl = false;
+bool verify = true;
 
 vector<int> wildcard_positions;
 
@@ -379,6 +380,7 @@ int main(int argc, char **argv) {
   double start_time = util::get_time();
   mutex mx;
   cout << fixed << setprecision(2);
+  size_t matches = 0;
   run(
     [&](size_t current) {
       if (verbose) {
@@ -392,6 +394,7 @@ int main(int argc, char **argv) {
     },
     [&](const string& match) {
       lock_guard<mutex> lg(mx);
+      matches++;
       unsigned char hash[hash_size];
       compute_hash((const unsigned char*)match.c_str(), match.size(), hash);
       if (verbose) {
@@ -401,6 +404,10 @@ int main(int argc, char **argv) {
       }
       print_repr_string(begin(match), end(match));
       cout << endl;
+      if (verify && !check(hash)) {
+        cerr << "Verification failed. The reported string does not actually pass the check." << endl;
+        exit(1);
+      }
       if (verbose) {
         cout << "  Hash: ";
         print_hex(hash, 16);
@@ -410,4 +417,13 @@ int main(int argc, char **argv) {
         exit(0);
     }
   );
+  if (verbose) {
+    double time = util::get_time() - start_time;
+    cout << endl;
+    cout << "STATS" << endl;
+    cout << "  Tested strings: " << total << endl;
+    cout << "  Matches: " << matches << endl;
+    cout << "  Time: " << time << " sec" << endl;
+    cout << "  Speed: " << (total/time/1e6) << " mhashes/sec" << endl;
+  }
 }
