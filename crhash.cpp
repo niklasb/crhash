@@ -36,6 +36,9 @@ void print_repr_string(I a, I b) {
   cout << (char)'"';
 }
 
+// constants
+const int PROGRESS_INTERVAL = 200000; // msecs
+
 // options
 string pattern;
 vector<string> alphabets;
@@ -48,13 +51,19 @@ bool verify = true;
 vector<int> wildcard_positions;
 
 template <typename T>
-void enumerate(int idx, string& pattern, T cb) {
+void enumerate(int idx, string& pattern, size_t& progress, T cb) {
   if (idx == wildcard_positions.size()) {
-    cb(pattern);
+    progress++;
+    if (progress % 2000000 == 0) {
+      cb(pattern, progress);
+      progress = 0;
+    } else {
+      cb(pattern, 0);
+    }
     return;
   }
   int p = wildcard_positions[idx];
-  string alphabet = idx < alphabets.size() ? alphabets[idx] : alphabets.back();
+  const string& alphabet = idx < alphabets.size() ? alphabets[idx] : alphabets.back();
   int alph_sz = alphabet.size();
   if (idx == 0 && num_threads > 1) {
     vector<thread> threads;
@@ -67,9 +76,10 @@ void enumerate(int idx, string& pattern, T cb) {
       }
       threads.emplace_back([=]() {
         string local_pattern = pattern;
+        size_t local_progress = 0;
         for (int i = first; i <= last; ++i) {
           local_pattern[p] = alphabet[i];
-          enumerate(idx + 1, local_pattern, cb);
+          enumerate(idx + 1, local_pattern, local_progress, cb);
         }
       });
       first = last + 1;
@@ -79,21 +89,16 @@ void enumerate(int idx, string& pattern, T cb) {
   } else {
     for (int i = 0; i < alph_sz; ++i) {
       pattern[p] = alphabet[i];
-      enumerate(idx + 1, pattern, cb);
+      enumerate(idx + 1, pattern, progress, cb);
     }
   }
 }
 
 template <typename T, typename U>
 void run_cpu(T cb_progress, U cb_match) {
-  atomic<long long> current(0);
-  enumerate(0, pattern, [&](const string& s) {
-    if (verbose) {
-      long long cur = ++current;
-      if (cur % 2000000 == 0) {
-        cb_progress(current);
-      }
-    }
+  size_t local_progress = 0;
+  enumerate(0, pattern, local_progress, [&](const string& s, size_t add_progress) {
+    cb_progress(add_progress);
     unsigned char hash[hash_size];
     compute_hash((const unsigned char*)s.c_str(), s.size(), hash);
     if (check(hash)) {
@@ -399,9 +404,12 @@ int main(int argc, char **argv) {
   mutex mx;
   cout << fixed << setprecision(2);
   size_t matches = 0;
-  run(
-    [&](size_t current) {
-      if (verbose) {
+  atomic<size_t> current(0);
+  atomic<bool> finished(false);
+  std::thread progress_printer([&]() {
+    do {
+      usleep(PROGRESS_INTERVAL);
+      {
         lock_guard<mutex> lg(mx);
         double time = util::get_time() - start_time;
         cout << "\rPROGRESS " << current << " / " << total
@@ -409,6 +417,12 @@ int main(int argc, char **argv) {
             << time << " sec, "
             << (current/time/1e6) << "mh/s)       " << flush;
       }
+    } while (!finished);
+  });
+  run(
+    [&](size_t add_progress) {
+      if (verbose && add_progress)
+        current += add_progress;
     },
     [&](const string& match) {
       lock_guard<mutex> lg(mx);
@@ -435,6 +449,8 @@ int main(int argc, char **argv) {
         exit(0);
     }
   );
+  finished.store(true);
+  progress_printer.join();
   if (verbose) {
     double time = util::get_time() - start_time;
     cout << endl;
