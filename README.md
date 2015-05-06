@@ -45,3 +45,18 @@ The included config searches for strings whose hexed MD5 hash is of the form
 
     EXAMPLES
       crhash -t 4 "My name is ???" :97:122
+
+### Building
+
+crhash is built using CMake:
+
+    $ mkdir build
+    $ cd build
+    $ cmake /path/to/crhash
+    $ make
+
+You can also use the included `run` wrapper script, which will create a build
+directory in the current working dir:
+
+    $ cd /path/to/crhash
+    $ ./run -h
