@@ -409,17 +409,19 @@ int main(int argc, char **argv) {
   atomic<size_t> current(0);
   atomic<bool> finished(false);
   std::thread progress_printer([&]() {
-    do {
-      usleep(PROGRESS_INTERVAL);
-      {
-        lock_guard<mutex> lg(mx);
-        double time = util::get_time() - start_time;
-        cout << "\rPROGRESS " << current << " / " << total
-            << " (" << (100.*current/total) << "%, "
-            << time << " sec, "
-            << (current/time/1e6) << "mh/s)       " << flush;
-      }
-    } while (!finished);
+    if (verbose) {
+      do {
+        usleep(PROGRESS_INTERVAL);
+        {
+          lock_guard<mutex> lg(mx);
+          double time = util::get_time() - start_time;
+          cout << "\rPROGRESS " << current << " / " << total
+              << " (" << (100.*current/total) << "%, "
+              << time << " sec, "
+              << (current/time/1e6) << "mh/s)       " << flush;
+        }
+      } while (!finished);
+    }
   });
   run(
     [&](size_t add_progress) {
