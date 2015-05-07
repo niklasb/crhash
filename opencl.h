@@ -25,11 +25,19 @@ class OpenCLApp {
     std::vector<cl::Device> devices;
     for (auto& p : platforms) {
       std::vector<cl::Device> platform_devs;
-      p.getDevices(CL_DEVICE_TYPE_GPU, &platform_devs);
+      p.getDevices(CL_DEVICE_TYPE_ALL, &platform_devs);
       copy(begin(platform_devs), end(platform_devs), back_inserter(devices));
     }
     assert(!devices.empty());
     device = devices[0];
+    for (auto& d : devices) {
+      cl_device_type type;
+      d.getInfo(CL_DEVICE_TYPE, &type);
+      if (type & CL_DEVICE_TYPE_GPU) {
+        device = d;
+        break;
+      }
+    }
     device.getInfo(CL_DEVICE_PLATFORM, &platform);
   }
 
