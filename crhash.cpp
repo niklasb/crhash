@@ -203,8 +203,8 @@ public:
       total = new_total;
     }
     for (size_t offset = 0; offset < total; offset += chunk_size) {
-      cb_progress(offset);
       run_group(offset, cb_match);
+      cb_progress(min(chunk_size, total - offset));
     }
   }
 
