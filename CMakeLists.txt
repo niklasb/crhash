@@ -6,8 +6,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 # OpenCL
 find_package(OpenCL)
 
-if(OPENCL_INCLUDE_DIRS)
-  include_directories(${OPENCL_INCLUDE_DIRS})
+if(OpenCL_FOUND)
+  include_directories(${OpenCL_INCLUDE_DIRS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OPENCL=1")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_OPENCL=0")
@@ -45,5 +45,7 @@ add_executable(crhash
   ${CL_COMPILED_SOURCES}
 )
 
-target_link_libraries(crhash ${OPENCL_LIBRARIES})
+if(OpenCL_FOUND)
+  target_link_libraries(crhash ${OpenCL_LIBRARIES})
+endif()
 target_link_libraries(crhash ${CMAKE_THREAD_LIBS_INIT})
