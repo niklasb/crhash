@@ -17,6 +17,10 @@ endif()
 set(CL_COMPILED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CL_COMPILED_SOURCES_DIR})
 
+if(OpenCL_FOUND)
+  include_directories(${OPENCL_INCLUDE_DIRS})
+endif()
+
 file(GLOB CL_SOURCES "*.cl")
 foreach(INPUT_FILE ${CL_SOURCES})
   get_filename_component(BASENAME ${INPUT_FILE} NAME)
@@ -46,6 +50,6 @@ add_executable(crhash
 )
 
 if(OpenCL_FOUND)
-  target_link_libraries(crhash ${OpenCL_LIBRARIES})
+  target_link_libraries(crhash ${OPENCL_LIBRARIES})
 endif()
 target_link_libraries(crhash ${CMAKE_THREAD_LIBS_INIT})

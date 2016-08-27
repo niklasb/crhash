@@ -109,7 +109,7 @@ void run_cpu(T cb_progress, U cb_match) {
   });
 }
 
-#if HAVE_OPENCL
+#if HAVE_OPENCL && CAN_OPENCL
 class CLBruteForceApp {
   OpenCLApp app;
   cl::Kernel kernel;
@@ -253,7 +253,7 @@ void run_gpu(T cb_progress, U cb_match) {
     app.print_cl_info();
   app.run(cb_progress, cb_match);
 }
-#else // HAVE_OPENCL
+#else // HAVE_OPENCL && CAN_OPENCL
 template <typename T, typename U>
 void run_gpu(T cb_progress, U cb_match) {
   cerr << "OpenCL not supported on your machine." << endl;
