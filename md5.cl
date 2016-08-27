@@ -7,6 +7,7 @@ uint4 md5(uint *buf, uint len);
 
 /* Macros for reading/writing chars from int32's (from rar_kernel.cl) */
 #define GETCHAR(buf, index) (((uchar*)(buf))[(index)])
+#define GETCHAR_GLOBAL(buf, index) (((__global uchar*)(buf))[(index)])
 #define PUTCHAR(buf, index, val) (buf)[(index)>>2] = ((buf)[(index)>>2] & ~(0xffU << (((index) & 3) << 3))) + ((val) << (((index) & 3) << 3))
 
 uint isdigit(uint x) {
@@ -169,7 +170,7 @@ __kernel void GenerateAndCheck(
     buf[i] = 0;
   uint p = 0;
   for (; p < prefix_len; ++p)
-    PUTCHAR(buf, p, GETCHAR(prefix, p));
+    PUTCHAR(buf, p, GETCHAR_GLOBAL(prefix, p));
   uint num = id + offset;
   uint base = hi - lo + 1;
   for (; p < prefix_len + sz; ++p) {
@@ -177,7 +178,7 @@ __kernel void GenerateAndCheck(
     num /= base;
   }
   for (uint j = 0; j < suffix_len; ++j) {
-    PUTCHAR(buf, p, GETCHAR(suffix, j));
+    PUTCHAR(buf, p, GETCHAR_GLOBAL(suffix, j));
     ++p;
   }
   /*for (int i = 0; i < 16; ++i)*/
